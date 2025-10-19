@@ -1,0 +1,19 @@
+LINK: https://leetcode.com/problems/employees-earning-more-than-their-managers/description/?envType=problem-list-v2&envId=v9r4nua2
+TYPE: Easy
+
+==> My approach:
+import pandas as pd
+
+def find_employees(employee: pd.DataFrame) -> pd.DataFrame:
+
+    #Join 2 tables
+    merged_table = pd.merge(employee, employee, left_on='managerId', right_on='id', how='inner')
+
+    # Filter employees having salary than their manager
+    filter_table = merged_table[merged_table['salary_x'] > merged_table['salary_y']]
+
+    # Rename employee name column 
+    final_table = filter_table[['name_x']].rename(columns={'name_x': 'Employee'})
+
+    return final_table
+
