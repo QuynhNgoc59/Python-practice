@@ -1,0 +1,14 @@
+LINK: https://leetcode.com/problems/duplicate-emails/description/?envType=problem-list-v2&envId=v9r4nua2
+TYPE: Easy
+
+==> My approach:
+import pandas as pd
+
+def duplicate_emails(person: pd.DataFrame) -> pd.DataFrame:
+    # Count person by email
+    person_count = person.groupby('email').size().reset_index(name='count')
+
+    # Filter duplicate emails
+    duplicate = person_count[person_count['count'] > 1][['email']]
+
+    return duplicate
