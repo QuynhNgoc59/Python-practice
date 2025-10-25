@@ -1,0 +1,26 @@
+LINK: https://leetcode.com/problems/customers-who-never-order/description/?envType=problem-list-v2&envId=v9r4nua2
+TYPE: Easy
+
+==> My approach 1 - use '.loc':
+import pandas as pd
+
+def find_customers(customers: pd.DataFrame, orders: pd.DataFrame) -> pd.DataFrame:
+    # Join 2 tables
+    df_merge = pd.merge(customers, orders, left_on='id', right_on='customerId', how='left')
+
+    # Filter customers who never had an order
+    final_output = df_merge.loc[df_merge['id_y'].isnull(), ['name']].rename(columns={'name': 'Customers'})
+
+    return final_output
+
+==> My approach 2 - use '.iloc':
+import pandas as pd
+
+def find_customers(customers: pd.DataFrame, orders: pd.DataFrame) -> pd.DataFrame:
+    # Join 2 tables
+    df_merge = pd.merge(customers, orders, left_on='id', right_on='customerId', how='left')
+
+    # Filter customers who never had an order
+    final_output = df_merge[df_merge['id_y'].isnull()].rename(columns={'name': 'Customers'}).iloc[:, 1:2]
+
+    return final_output
