@@ -1,0 +1,14 @@
+LINK: https://leetcode.com/problems/delete-duplicate-emails/description/?envType=problem-list-v2&envId=v9r4nua2
+TYPE: Easy
+
+==> My approach:
+import pandas as pd
+
+def delete_duplicate_emails(person: pd.DataFrame) -> None:
+    # Sort the data frame by ID
+    person.sort_values(by='id', inplace=True)
+
+    # Return data frame after removing duplicates
+    person.drop_duplicates(subset='email', keep='first', inplace=True)
+
+    
