@@ -1,0 +1,44 @@
+LINK: https://leetcode.com/problems/seasonal-sales-analysis/description/?envType=problem-list-v2&envId=21z3vf9h
+TYPE: Medium
+
+==> My approach:
+
+import pandas as pd
+
+def seasonal_sales_analysis(products: pd.DataFrame, sales: pd.DataFrame) -> pd.DataFrame:
+    
+    # Identify season for each order
+    def season_group(row):
+        month = row['sale_date'].month
+        if month in (12, 1, 2):
+            return 'Winter'
+        if month in (3, 4, 5):
+            return 'Spring'
+        if month in (6, 7, 8):
+            return 'Summer'
+        else:
+            return 'Fall'
+    sales['season'] = sales.apply(season_group, axis=1)
+    
+    # Join the above output with 'products'
+    merged_tables = pd.merge(sales, products, on='product_id', how='inner')
+
+    # Calculate revenue per order
+    rev_cal = merged_tables.assign(revenue = merged_tables['quantity']*merged_tables['price'])
+
+    # Calculate revenue & sold qty per category & season
+    qty_cal = rev_cal.groupby(['season','category'])[['quantity', 'revenue']].sum().reset_index()
+
+
+    # Rank the category by sold qty & revenue, respectively, per season
+    qty_cal['category_rank'] = (
+    qty_cal.groupby('season', group_keys=False)
+           .apply(lambda g: g.sort_values(['quantity', 'revenue'], ascending=[False, False])
+                            .assign(category_rank=lambda x: range(1, len(x) + 1)))
+           ['category_rank']
+    )
+
+    # Filter categories where their ranks = 1
+    filtered_df = qty_cal[qty_cal['category_rank'] == 1].rename(columns={'quantity': 'total_quantity', 'revenue': 'total_revenue'}).drop(columns=['category_rank'])
+
+    return filtered_df
