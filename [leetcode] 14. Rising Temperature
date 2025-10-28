@@ -1,0 +1,17 @@
+LINK: https://leetcode.com/problems/rising-temperature/?envType=problem-list-v2&envId=v9r4nua2
+TYPE: Easy
+
+==> My approach:
+import pandas as pd
+
+def rising_temperature(weather: pd.DataFrame) -> pd.DataFrame:
+    # Find the previous 1 day of each date'id
+    weather['prev_day'] = weather['recordDate'] - pd.DateOffset(days=1)
+
+    # Join 'weather' with itself to get temperature_y of prev day
+    merged_df = pd.merge(weather, weather, left_on='prev_day', right_on='recordDate', how='inner')
+
+    # Filter rows where there is a rise in temprature 
+    filtered_df = merged_df[merged_df['temperature_x'] > merged_df['temperature_y']]
+
+    return filtered_df[['id_x']].rename(columns={'id_x':'Id'})
