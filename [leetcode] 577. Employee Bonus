@@ -1,0 +1,14 @@
+LINK: https://leetcode.com/problems/employee-bonus/description/?envType=problem-list-v2&envId=m8baczxh
+TYPE:
+
+==> My approach:
+import pandas as pd
+
+def employee_bonus(employee: pd.DataFrame, bonus: pd.DataFrame) -> pd.DataFrame:
+    # Join 2 tables to fully get employee info
+    merged_df = pd.merge(employee, bonus, how='left', on='empId')
+
+    # Filter employee with bonus of less than 1000 or without a bonus
+    filtered_df = merged_df.loc[(merged_df['bonus'] < 1000) | (merged_df['bonus'].isnull()), ['name', 'bonus']]
+
+    return filtered_df
