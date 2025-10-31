@@ -1,0 +1,15 @@
+LINK: https://leetcode.com/problems/sales-person/description/?envType=problem-list-v2&envId=m8baczxh
+TYPE: Easy
+
+==> My approach:
+import pandas as pd
+
+def sales_person(sales_person: pd.DataFrame, company: pd.DataFrame, orders: pd.DataFrame) -> pd.DataFrame:
+    # Join Company with Orders to get sales_id of orders of company named with 'red'
+    merged_ord_comp = pd.merge(company, orders, how='inner', on='com_id').query('name == "RED"')['sales_id']
+
+    # Join Sales_person with Orders
+    merged_per_ord = pd.merge(sales_person, orders, how='left', on='sales_id')[['sales_id', 'name']]
+
+    # Find sales rep who have no orders of company named 'red'
+    return merged_per_ord[~merged_per_ord['sales_id'].isin(merged_ord_comp)][['name']].drop_duplicates()
