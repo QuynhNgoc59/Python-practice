@@ -1,0 +1,15 @@
+LINK: https://leetcode.com/problems/customer-placing-the-largest-number-of-orders/description/?envType=problem-list-v2&envId=m8baczxh
+TYPE: Easy
+
+==> My approach:
+import pandas as pd
+
+def largest_orders(orders: pd.DataFrame) -> pd.DataFrame:
+    # Calculate the number of orders per customer
+    Num_order = orders.groupby('customer_number').agg(order_count=('order_number', 'count')).reset_index()
+
+    # Order the df by number of orders
+    Ordered_df = Num_order.sort_values(by=['order_count'], ascending=False)
+
+    # Get the customer with highest number of orders only
+    return Ordered_df[['customer_number']].head(1)
