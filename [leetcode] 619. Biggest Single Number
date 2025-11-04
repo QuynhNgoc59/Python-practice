@@ -1,0 +1,13 @@
+LINK: https://leetcode.com/problems/biggest-single-number/description/?envType=problem-list-v2&envId=m8baczxh
+TYPE: Easy
+
+==> My approach:
+import pandas as pd
+
+def biggest_single_number(my_numbers: pd.DataFrame) -> pd.DataFrame:
+    # Calculate occurrence per number
+    num_occurrence = my_numbers.groupby('num').size().reset_index(name='occurrence_count')
+
+    # Identify single numbers & get the maximum one
+    sorted_occurrence = num_occurrence.loc[num_occurrence['occurrence_count'] == 1, ['num']].sort_values(by='num', ascending=False)
+    return sorted_occurrence.max().to_frame(name='num')
