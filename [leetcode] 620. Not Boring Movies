@@ -1,0 +1,9 @@
+LINK: https://leetcode.com/problems/not-boring-movies/description/?envType=problem-list-v2&envId=v9r4nua2
+TYPE: Easy
+
+==> My approach:
+import pandas as pd
+
+def not_boring_movies(cinema: pd.DataFrame) -> pd.DataFrame:
+    filtered_cinema = cinema.loc[(cinema['id'] % 2 != 0) & (cinema['description'] != "boring"), ['id', 'movie', 'description', 'rating']].sort_values(by='rating', ascending=False)
+    return filtered_cinema
