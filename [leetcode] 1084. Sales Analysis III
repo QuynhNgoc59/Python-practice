@@ -1,0 +1,24 @@
+LINK: https://leetcode.com/problems/sales-analysis-iii/description/
+TYPE: Easy
+
+==> My approach:
+import pandas as pd
+
+def sales_analysis(product: pd.DataFrame, sales: pd.DataFrame) -> pd.DataFrame:
+    # Get sold products
+    sold_products = pd.merge(product, sales, on='product_id', how='inner')
+
+    # Create date filter
+    date_filter = sold_products['sale_date'].between('2019-01-01', '2019-03-31')
+
+    # Get products sold in 2019-01-01 and 2019-03-31
+    in_period = set(sold_products.loc[date_filter, 'product_id'])
+
+    # Get products not sold in 2019-01-01 and 2019-03-31
+    out_period = set(sold_products.loc[~date_filter, 'product_id'])
+
+    # Get products only sold in 2019-01-01 and 2019-03-31
+    only_in_period = in_period - out_period
+    return product.loc[product['product_id'].isin(only_in_period), ['product_id', 'product_name']]
+
+
