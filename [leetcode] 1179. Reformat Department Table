@@ -1,0 +1,23 @@
+LINK: https://leetcode.com/problems/reformat-department-table/description/?envType=problem-list-v2&envId=m8baczxh
+TYPE: Easy
+
+==> My approach:
+import pandas as pd
+
+def reformat_table(department: pd.DataFrame) -> pd.DataFrame:
+    # Pivot month column into separate columns for each month
+    pivotted_table = (
+        department
+        .pivot(index='id', columns='month', values='revenue')
+        .reset_index()
+    ) 
+
+    # Create months order
+    months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+
+    # Re-order the columns
+    reordered_columns = ['id'] + months
+    pivotted_table = pivotted_table.reindex(columns=reordered_columns)
+
+    # Add suffix '_Revenue' to each month column
+    return pivotted_table.rename(columns={col: f"{col}_Revenue" for col in months})
