@@ -1,0 +1,21 @@
+LINK: https://leetcode.com/problems/queries-quality-and-percentage/description/?envType=problem-list-v2&envId=v9r4nua2
+TYPE: Easy 
+
+==> My approach:
+# import pandas as pd
+
+def queries_stats(queries: pd.DataFrame) -> pd.DataFrame:
+    # Calculate quality per query 
+    queries['quality'] = queries['rating'] / queries['position'] + 1e-10
+
+    # Calculate the the poor queries %
+    queries['poor_query_percentage'] = np.where(queries['rating'] < 3, 100, 0)
+    
+    # Calculate the avg % of quality & poor queries
+    final_calculation = (
+        queries.groupby(by=('query_name'))[['quality', 'poor_query_percentage']]
+               .mean()
+               .round(2)
+               .reset_index()
+    )
+    return final_calculation
