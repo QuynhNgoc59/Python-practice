@@ -1,0 +1,18 @@
+LINK: https://leetcode.com/problems/list-the-products-ordered-in-a-period/?envType=problem-list-v2&envId=v9r4nua2
+TYPE: Easy
+
+==> My approach:
+import pandas as pd
+
+def list_products(products: pd.DataFrame, orders: pd.DataFrame) -> pd.DataFrame:
+    # Get product name with at least 100 sold units in Feb 2020 
+    products = (
+        pd
+        .merge(products, orders, on='product_id', how='inner')
+        .query('order_date < "2020-03-01" and order_date > "2020-01-31"')
+        .groupby(by=['product_id', 'product_name'])['unit']
+        .sum()
+        .reset_index(name='unit')
+        .query('unit >= 100')[['product_name', 'unit']]
+    )
+    return products
