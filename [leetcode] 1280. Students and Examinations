@@ -1,0 +1,31 @@
+LINK: https://leetcode.com/problems/students-and-examinations/description/?envType=problem-list-v2&envId=v9r4nua2
+TYPE: Easy
+
+==> My approach:
+import pandas as pd
+
+def students_and_examinations(students: pd.DataFrame, subjects: pd.DataFrame, examinations: pd.DataFrame) -> pd.DataFrame:
+    # Match students with with all subjects
+    student_subject = (
+        pd
+        .merge(students, subjects, how='cross')
+    )
+
+    # Calculate number of exam per students
+    num_exam = (
+        examinations
+        .groupby(by=['student_id', 'subject_name'])
+        .size()
+        .reset_index(name='attended_exams')
+    )
+
+    # Get full student info
+    final_result = (
+        pd
+        .merge(student_subject, num_exam, on=['student_id', 'subject_name'], how='left')
+    )
+    
+    final_result['attended_exams'] = final_result['attended_exams'].fillna(0).astype(int)
+
+    return final_result.sort_values(by=['student_id', 'subject_name'])
+
