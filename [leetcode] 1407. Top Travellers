@@ -1,0 +1,16 @@
+LINK: https://leetcode.com/problems/top-travellers/submissions/?envType=problem-list-v2&envId=v9r4nua2
+TYPE: Easy
+
+==> My approach:
+import pandas as pd
+
+def top_travellers(users: pd.DataFrame, rides: pd.DataFrame) -> pd.DataFrame:
+    # Calculate travelled distance by user
+    travalled_distance = (
+        pd.merge(users, rides, left_on='id', right_on='user_id', how='left')
+        .groupby(by=['user_id', 'name'], dropna=False)['distance']
+        .sum()
+        .reset_index(name='travelled_distance')
+        .sort_values(by=['travelled_distance', 'name'], ascending=[False, True])
+    )
+    return travalled_distance[['name', 'travelled_distance']]
