@@ -1,0 +1,38 @@
+LINK: https://leetcode.com/problems/average-selling-price/description/?envType=problem-list-v2&envId=v9r4nua2
+TYPE: Easy
+
+==> My approach:
+import pandas as pd
+
+def average_selling_price(prices: pd.DataFrame, units_sold: pd.DataFrame) -> pd.DataFrame:
+    # Get valid prices for each product sold
+    valid_prices = pd.merge(prices, units_sold, on='product_id', how='left')
+    
+    # Keep only matching date ranges OR rows where units_sold didn't exist
+    condition = (
+        (valid_prices['purchase_date'] >= valid_prices['start_date']) &
+        (valid_prices['purchase_date'] <= valid_prices['end_date'])
+    ) | valid_prices['purchase_date'].isna()
+
+    filtered_orders = valid_prices[condition]
+
+    # Calculate revenue per order
+    filtered_orders['revenue'] = (filtered_orders['price'] * filtered_orders['units']).fillna(0)
+
+    # Calculate total revenue & qty sold per product_id
+    rev_qty_cal = (
+        filtered_orders.groupby(by='product_id')[['revenue', 'units']]
+                    .sum()
+                    .reset_index()
+    )
+
+    # Calculate the avg selling price
+    rev_qty_cal['average_price'] = np.where(
+        rev_qty_cal['units'] == 0,
+        0,
+        rev_qty_cal['revenue'] / rev_qty_cal['units']
+    )
+
+    return rev_qty_cal[['product_id', 'average_price']].round(2)
+    
+
