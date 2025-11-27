@@ -1,0 +1,41 @@
+LINK: https://leetcode.com/problems/group-sold-products-by-the-date/?envType=problem-list-v2&envId=v9r4nua2
+TYPE: Easy
+
+==> Approach 1:
+# import pandas as pd
+
+# def categorize_products(activities: pd.DataFrame) -> pd.DataFrame:
+#     concatenated_product = (
+#         activities
+#         .sort_values(by='product', ascending=True)
+#         .drop_duplicates()
+#         .groupby(by='sell_date')
+#         .agg(
+#             num_sold = ('product', 'count'),
+#             products = ('product', lambda x: ','.join(x))
+#         )
+#         .reset_index()
+#         .sort_values(by='sell_date', ascending=True)
+#     )
+#     return concatenated_product
+
+
+==> Approach 2:
+import pandas as pd
+
+def categorize_products(activities: pd.DataFrame) -> pd.DataFrame:
+    # Concatenate separate records of product names into a single string
+    concatenated_product = (
+        activities
+        .sort_values(by='product', ascending=True)
+        .drop_duplicates()
+        .groupby(by='sell_date')
+        .agg(products = ('product', lambda x: ','.join(x)))
+        .reset_index()
+    )
+
+    # Calculate number of products within each string
+    concatenated_product['num_sold'] = concatenated_product['products'].apply(lambda y: len(y.split(',')))
+
+    return concatenated_product.sort_values(by='sell_date', ascending=True)[['sell_date', 'num_sold', 'products']]
+    
