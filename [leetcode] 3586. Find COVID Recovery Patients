@@ -1,0 +1,39 @@
+LINK: https://leetcode.com/problems/find-covid-recovery-patients/submissions/1840928893/?envType=problem-list-v2&envId=21z3vf9h
+TYPE: Medium
+
+==> My approach:
+import pandas as pd
+
+def find_covid_recovery_patients(patients: pd.DataFrame, covid_tests: pd.DataFrame) -> pd.DataFrame:
+    # Get the first positive result per patient
+    first_positive_test = (
+        covid_tests[(covid_tests['result'] != 'Inconclusive') & (covid_tests['result'] == 'Positive')]
+        .groupby(by='patient_id')['test_date']
+        .min()
+        .reset_index(name='first_positive')
+    )
+
+    # Filter test dates after the first positive test
+    filtered_test_date = (
+        covid_tests[covid_tests['result'] == 'Negative']
+        .merge(first_positive_test, on='patient_id', how='inner')
+        .query('test_date > first_positive and result != "Inconclusive"')
+        .groupby(by='patient_id')['test_date']
+        .min()
+        .reset_index(name='first_negative')
+    )
+
+    # Calculate day difference between postive & negatice test
+    combined_dates = first_positive_test.merge(filtered_test_date, on='patient_id', how='inner')
+    combined_dates['first_negative'] = pd.to_datetime(combined_dates['first_negative'], format='%Y-%m-%d')
+    combined_dates['first_positive'] = pd.to_datetime(combined_dates['first_positive'], format='%Y-%m-%d')
+
+    combined_dates['recovery_time'] = (combined_dates['first_negative'] - combined_dates['first_positive']).dt.days
+
+    # Get full patient info 
+    recovered_patient = (
+        combined_dates
+        .merge(patients, on='patient_id', how='inner')[['patient_id', 'patient_name', 'age', 'recovery_time']]
+        .sort_values(by=['recovery_time', 'patient_name'], ascending=True)
+    )
+    return recovered_patient
