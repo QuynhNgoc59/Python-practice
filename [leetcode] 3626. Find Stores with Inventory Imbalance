@@ -1,0 +1,46 @@
+LINK: https://leetcode.com/problems/find-stores-with-inventory-imbalance/editorial/?envType=problem-list-v2&envId=21z3vf9h
+TYPE: Easy
+
+==> My approach:
+import pandas as pd
+
+def find_inventory_imbalance(stores: pd.DataFrame, inventory: pd.DataFrame) -> pd.DataFrame:
+    # Filter stores with at least 3 products
+    min_products = (
+        pd
+        .merge(stores, inventory, how='inner', on='store_id')
+        .groupby(by=['store_id', 'store_name', 'location'])['inventory_id']
+        .nunique()
+        .reset_index(name='num_product')
+        .query('num_product >= 3')
+    )
+
+    # Get the cheapest & most expensive price per store
+    min_max_price = (
+        pd
+        .merge(min_products, inventory, on='store_id', how='inner')
+        .groupby(by='store_id')
+        .agg(
+            min_price = ('price', 'min'),
+            max_price = ('price', 'max')
+        )
+        .reset_index()
+    )
+
+    # Get store name, location, product name per store
+    product_info = (
+        pd
+        .merge(min_max_price, stores, how='inner', on='store_id')
+        .merge(inventory, how='left', left_on=['store_id', 'max_price'], right_on=['store_id', 'price'])
+        .merge(inventory, how='left', left_on=['store_id', 'min_price'], right_on=['store_id', 'price'])
+        .rename(columns={'product_name_x': 'most_exp_product', 'product_name_y': 'cheapest_product', 'quantity_x': 'max_qty', 'quantity_y': 'min_qty'})
+        [['store_id', 'store_name', 'location', 'most_exp_product', 'cheapest_product', 'max_qty', 'min_qty']]
+    )
+
+    # Calculate imbalance ratio
+    product_info['imbalance_ratio'] = (product_info['min_qty'] / product_info['max_qty']).round(2)
+    return (
+        product_info[['store_id', 'store_name', 'location', 'most_exp_product', 'cheapest_product', 'imbalance_ratio']]
+        .query('imbalance_ratio > 1')
+        .sort_values(by=['imbalance_ratio', 'store_name'], ascending=[False, True])
+    )
