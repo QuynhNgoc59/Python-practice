@@ -1,0 +1,33 @@
+LINK: https://leetcode.com/problems/find-overbooked-employees/submissions/1845821969/?envType=problem-list-v2&envId=21z3vf9h
+TYPE: Medium
+
+==> My approach:
+import pandas as pd
+
+def find_overbooked_employees(employees: pd.DataFrame, meetings: pd.DataFrame) -> pd.DataFrame:
+    # Get week number of the year
+    meetings['week_num'] = meetings['meeting_date'].dt.isocalendar()['week']
+
+    # Identify employees with more than 30 hours of meeting time per week
+    meeting_heavy_emp = (
+        meetings.groupby(by=['employee_id', 'week_num'])['duration_hours']
+        .sum()
+        .reset_index(name='total_hour')
+        .query('total_hour > 20')
+    )
+
+    # Calculate number of heavy-meeting weeks per employeee
+    num_meeting_heavy = (
+        meeting_heavy_emp.groupby(by='employee_id')['week_num']
+        .count()
+        .reset_index(name='meeting_heavy_weeks')
+        .query('meeting_heavy_weeks >= 2')
+    )
+
+    # Get full employees' info
+    return (
+        num_meeting_heavy
+        .merge(employees, on='employee_id', how='inner')
+        .sort_values(by=['meeting_heavy_weeks', 'employee_name'], ascending=[False, True])
+        [['employee_id', 'employee_name', 'department', 'meeting_heavy_weeks']]
+    )
