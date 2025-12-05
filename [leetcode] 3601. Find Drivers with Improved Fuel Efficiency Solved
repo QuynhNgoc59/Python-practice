@@ -1,0 +1,52 @@
+LINK: https://leetcode.com/problems/find-drivers-with-improved-fuel-efficiency/submissions/1847389887/?envType=problem-list-v2&envId=21z3vf9h
+TYPE: Medium
+
+==> My approach:
+import pandas as pd
+
+def find_improved_efficiency_drivers(drivers: pd.DataFrame, trips: pd.DataFrame) -> pd.DataFrame:
+    # Identify quarter per trip
+    trips['trip_date'] = pd.to_datetime(trips['trip_date'])
+    trips['quarter_num'] = trips['trip_date'].dt.quarter
+
+    # Calculate fuel efficiency per trip
+    trips['fuel_efficiency'] = trips['distance_km'] / trips['fuel_consumed']
+
+    # Calculate avg fuel efficiency per driver in the half 1 of the year
+    trips_1 = (
+        trips[trips['quarter_num'] <= 2]
+        .groupby(by='driver_id')['fuel_efficiency']
+        .mean()
+        .reset_index(name='first_half_avg')
+    )
+
+    # Calculate avg fuel efficiency per driver in the half 2 of the year
+    trips_2 = (
+        trips[trips['quarter_num'] > 2]
+        .groupby(by='driver_id')['fuel_efficiency']
+        .mean()
+        .reset_index(name='second_half_avg')
+    )
+
+    # Filter drivers driving in both halfs of the year + get drivers' name
+    filtered_driver = (
+        trips_1
+        .merge(trips_2, on='driver_id', how='inner')
+        .merge(drivers, on='driver_id', how='inner')
+    )
+
+    # Calculate efficiency improvement per driver
+    filtered_driver['efficiency_improvement'] = (filtered_driver['second_half_avg'] - filtered_driver['first_half_avg']).round(2)
+
+    # Get drivers with improved fuel efficiency
+    return (
+        filtered_driver[filtered_driver['efficiency_improvement'] > 0]
+        .loc[:, ['driver_id', 'driver_name', 'first_half_avg', 'second_half_avg', 'efficiency_improvement']].round(2)
+        .sort_values(by=['efficiency_improvement', 'driver_name'], ascending=[False, True])
+    )
+
+
+   
+
+
+
