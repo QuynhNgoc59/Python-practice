@@ -1,0 +1,49 @@
+LINK: https://leetcode.com/problems/find-loyal-customers/submissions/1851643603/?envType=problem-list-v2&envId=21z3vf9h
+TYPE: Medium
+
+==> My approach:
+import pandas as pd
+
+def find_loyal_customers(customer_transactions: pd.DataFrame) -> pd.DataFrame:
+    # Filter customers with at least 3 purchase transactions
+    total_trans = (
+        customer_transactions
+        .groupby(by='customer_id')['transaction_id']
+        .count()
+        .reset_index(name='total_trans')
+        .query('total_trans >= 3')
+    )
+    
+    # Filter customers with at least 30 active days
+    filtered_active_days = (
+        customer_transactions
+        .assign(transaction_date = pd.to_datetime(customer_transactions['transaction_date']))
+        .groupby(by='customer_id')
+        .agg (
+            min_trans = ('transaction_date', 'min'),
+            max_trans = ('transaction_date', 'max')
+        )
+        .reset_index()
+        .assign(active_days = lambda df :(df['max_trans'] - df['min_trans']).dt.days)
+        .query('active_days >= 30')
+        .reset_index()[['customer_id', 'active_days']]
+    )
+
+    # Filter customers with refund % < 20
+    refund_trans = (
+        customer_transactions
+        .assign(is_refund = customer_transactions['transaction_type'].eq('refund'))
+        .groupby('customer_id')['is_refund']
+        .mean()
+        .reset_index(name='refund_rate') 
+        .query('refund_rate < 0.2')
+    )
+
+    # Get final customer list meeting all requirements
+    return (
+        total_trans
+        .merge(filtered_active_days, how='inner', on='customer_id')
+        .merge(refund_trans, how='inner', on='customer_id')['customer_id']
+        .to_frame()
+        .sort_values(by='customer_id', ascending=True)
+    )
