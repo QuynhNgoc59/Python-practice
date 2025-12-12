@@ -1,0 +1,66 @@
+LINK: https://leetcode.com/problems/find-churn-risk-customers/submissions/1852701125/?envType=problem-list-v2&envId=21z3vf9h
+TYPE: Medium
+
+==> My approach:
+import pandas as pd
+
+def find_churn_risk_customers(subscription_events: pd.DataFrame) -> pd.DataFrame:
+    # Rank event descendingly per customer 
+    subscription_events['event_order'] = (
+        subscription_events
+        .groupby('user_id')['event_date'].rank(method='max', ascending=False)
+    )
+
+    # Filter customers without 'cancel' type in the last event
+    filtered_customers1 = (
+        subscription_events
+        .loc[(subscription_events['event_type'] != 'cancel') & (subscription_events['event_order'] == 1)]
+        .rename(columns={'plan_name': 'current_plan'})[['user_id', 'current_plan']]
+    )
+
+    # Filter customers with current revenue < 50% of maximum historical revenue
+    filtered_customers2 = (
+        subscription_events
+        .groupby('user_id')
+        .apply (
+            lambda x: pd.Series ({
+                'current_monthly_amount': x.loc[x['event_order'] == 1, 'monthly_amount'].max(),
+                'half_max_historical_amount': x.loc[x['event_order'] != 1, 'monthly_amount'].max() * 0.5,
+                'max_historical_amount': x.loc[x['event_order'] != 1, 'monthly_amount'].max()
+            })
+        )
+        .reset_index()
+        .query('current_monthly_amount < half_max_historical_amount')[['user_id', 'current_monthly_amount', 'max_historical_amount']]
+    )
+
+    # Filter customers with at least one downgrade in their subscription history
+    filtered_customers3 = (
+        subscription_events
+        .assign(is_downgrade = subscription_events['event_type'].eq('downgrade'))
+        .groupby('user_id')['event_id']
+        .count()
+        .reset_index(name='downgrade_count')
+        .query('downgrade_count >= 1')[['user_id']]
+    )
+
+    # Filter customers with at least 60 active days
+    filtered_customers4 = (
+        subscription_events
+        .assign(event_date = pd.to_datetime(subscription_events['event_date']))
+        .groupby(by='user_id')
+        .agg (
+            min_trans = ('event_date', 'min'),
+            max_trans = ('event_date', 'max')
+        )
+        .reset_index()
+        .assign(days_as_subscriber = lambda df :(df['max_trans'] - df['min_trans']).dt.days)
+        .query('days_as_subscriber >= 60')[['user_id', 'days_as_subscriber']]
+    )
+
+    return (
+        filtered_customers1
+        .merge(filtered_customers2, on='user_id', how='inner')
+        .merge(filtered_customers3, on='user_id', how='inner')
+        .merge(filtered_customers4, on='user_id', how='inner')
+        .sort_values(by=['days_as_subscriber', 'user_id'], ascending=[False, True])
+    )
