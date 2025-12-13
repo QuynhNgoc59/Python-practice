@@ -1,0 +1,59 @@
+LINK: https://leetcode.com/problems/find-golden-hour-customers/description/?envType=problem-list-v2&envId=21z3vf9h
+TYPE: Medium
+
+==> My approach:
+import pandas as pd
+
+def find_golden_hour_customers(restaurant_orders: pd.DataFrame) -> pd.DataFrame:
+    # Extract time from order_timestamp
+    restaurant_orders['order_timestamp'] = pd.to_datetime(restaurant_orders['order_timestamp'])
+    restaurant_orders['order_time'] = restaurant_orders['order_timestamp'].dt.strftime("%H:%M")
+    
+    # Create peak hour filter range
+    peak_hour = (
+    ((restaurant_orders['order_time'] >= "11:00") &
+     (restaurant_orders['order_time'] <= "14:00")) |
+    ((restaurant_orders['order_time'] >= "18:00") &
+     (restaurant_orders['order_time'] <= "21:00"))
+    )
+
+    # Create rate flag
+    rated_orders = ~(restaurant_orders['order_rating']).isnull()
+
+    # Identify if orders is in peak hours
+    restaurant_orders['is_peak_hour'] = peak_hour
+
+    # Identify if orders is rated
+    restaurant_orders['is_rated'] = rated_orders
+
+    # Calculate total order, peakhour rate, avg rating per customer
+    restaurant_orders = (
+        restaurant_orders
+        .groupby('customer_id')
+        .agg (
+            total_orders = ('order_id', 'count'),
+            peak_hour_percentage  = ('is_peak_hour', 'mean'),
+            average_rating = ('order_rating', 'mean'),
+            rated_order_rate = ('is_rated', 'mean')
+        )
+        .reset_index()
+    )
+
+    # Adjust format of peak hour rate & average_rating 
+    restaurant_orders['peak_hour_percentage'] = (restaurant_orders['peak_hour_percentage']*100).round(0)
+    restaurant_orders['average_rating'] = restaurant_orders['average_rating'].round(2)
+
+    # Filter customers with all conditions
+    peak_hour = restaurant_orders['peak_hour_percentage'] >= 60
+    total_order = restaurant_orders['total_orders'] >= 3
+    avg_rating = restaurant_orders['average_rating'] >= 4.0
+    rated_order_rate = restaurant_orders['rated_order_rate'] >= 0.5
+    
+    filtered_cust = restaurant_orders[peak_hour & total_order & avg_rating & rated_order_rate]
+
+    return (
+        filtered_cust
+        .drop(columns='rated_order_rate')
+        .sort_values(by=['average_rating', 'customer_id'], ascending=False)
+    )
+
