@@ -1,0 +1,49 @@
+LINK: https://leetcode.com/problems/find-zombie-sessions/description/?envType=problem-list-v2&envId=21z8wa8r
+TYPE: HEARD
+
+==> My approach:
+import pandas as pd
+
+def find_zombie_sessions(app_events: pd.DataFrame) -> pd.DataFrame:
+    # Filter users with at least 30 mins of session duration
+    
+    filtered_users1 = (
+        app_events
+        .assign(event_timestamp = pd.to_datetime(app_events['event_timestamp']))
+        .groupby(by=['user_id', 'session_id'])
+        .agg(
+            latest_event = ('event_timestamp', 'max'),
+            earliest_event = ('event_timestamp', 'min')
+        )
+        .reset_index()
+        .assign(session_duration_minutes = lambda df: (df['latest_event'] - df['earliest_event']).dt.total_seconds()/ 60)
+        .query('session_duration_minutes > 30')
+    )
+    
+    # Filter users with at least 5 scroll events + 0 purchase event + click_roll_rate of at least 0.2
+    filtered_users2 = (
+        app_events
+        .assign(is_scroll = app_events['event_type'].eq('scroll'))
+        .assign(is_purchase = app_events['event_type'].eq('purchase'))
+        .assign(is_click = app_events['event_type'].eq('click'))
+        .groupby(by=['user_id', 'session_id'])
+        .agg (
+            scroll_count = ('is_scroll', 'sum'),
+            purchase_count = ('is_purchase', 'sum'),
+            click_count = ('is_click', 'sum')
+        )
+        .reset_index()
+        .assign(click_scroll_ratio = lambda df: df['click_count'] / df['scroll_count'])
+        .query(
+            'scroll_count >= 5 and purchase_count == 0 and click_scroll_ratio < 0.2'
+        )
+    )
+    
+    return (
+        filtered_users1
+        .merge(filtered_users2, on='user_id', how='inner')
+        .sort_values(by=['scroll_count', 'session_id_x'], ascending=[False, True])
+        [['session_id_x', 'user_id', 'session_duration_minutes', 'scroll_count']]
+        .rename(columns={'session_id_x': 'session_id'})
+    )
+    
