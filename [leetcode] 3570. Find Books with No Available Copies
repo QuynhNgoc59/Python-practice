@@ -1,0 +1,26 @@
+LINK: https://leetcode.com/problems/find-books-with-no-available-copies/description/
+TYPE: Easy
+
+==> My approach:
+import pandas as pd
+
+def find_books_with_no_available_copies(library_books: pd.DataFrame, borrowing_records: pd.DataFrame) -> pd.DataFrame:
+    # Identify books havent been returned yet
+    borrowing_records['is_unreturned'] = borrowing_records['return_date'].isnull()
+
+    # Get books which was borrowed but not returned yet
+    filtered_books = (
+        borrowing_records
+        .groupby('book_id')['is_unreturned']
+        .sum()
+        .reset_index(name='current_borrowers')
+        .merge(library_books, how='inner', on='book_id')
+        .assign(remaining_copies= lambda x: x['total_copies'] - x['current_borrowers'])
+        .query('remaining_copies == 0')
+        .sort_values(by=['current_borrowers', 'title'], ascending=[False, True])[['book_id', 'title', 'author', 'genre', 'publication_year', 'current_borrowers']]
+        
+    )
+
+    return filtered_books
+
+    
