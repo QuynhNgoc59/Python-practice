@@ -1,0 +1,45 @@
+LINK: https://leetcode.com/problems/most-common-course-pairs/?envType=problem-list-v2&envId=21z8wa8r
+TYPE: Hard
+
+==> My approach:
+import pandas as pd
+
+def topLearnerCourseTransitions(course_completions: pd.DataFrame) -> pd.DataFrame:
+    # Filter users completing >= 5 course with avg rating of >= 4
+    filtered_users = (
+        course_completions
+        .groupby('user_id')
+        .agg(
+            course_count = ('course_id', 'count'),
+            avg_rating = ('course_rating', 'mean')
+        )
+        .reset_index()
+        .query('course_count >= 5 & avg_rating >= 4')['user_id']
+    )
+    # Get the following course after each course per user
+    course_completions = course_completions.sort_values(by=['user_id', 'completion_date'], ascending=[True, True])
+    course_completions['second_course'] = (
+        course_completions
+        .groupby('user_id')['course_name']
+        .shift(-1)
+    )
+
+    # Calculate number of occurrences per course pair
+    occurrences = (
+        course_completions[course_completions['second_course'].notnull()]
+        .merge(filtered_users, on='user_id', how='inner')
+        .rename(columns={'course_name': 'first_course'})
+        .groupby(['first_course', 'second_course'])
+        .size()
+        .reset_index(name='transition_count')
+    )
+
+    # Sort the previous result
+    occurrences['lower_first_course'] = occurrences.first_course.str.lower()
+    occurrences['lower_second_course'] = occurrences.second_course.str.lower()
+
+    return (
+        occurrences
+        .sort_values(by=['transition_count', 'lower_first_course', 'lower_second_course'], ascending=[False, True, True])
+        .iloc[:, [0, 1, 2]]
+    )
