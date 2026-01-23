@@ -1,0 +1,47 @@
+LINK: https://leetcode.com/problems/find-emotionally-consistent-users/submissions/1894187950/
+TYPE: Medium 
+
+==> My approach:
+import pandas as pd
+
+def find_emotionally_consistent_users(reactions: pd.DataFrame) -> pd.DataFrame:
+    # Calculate number of reactions per user
+    total_reactions = (
+        reactions
+        .groupby('user_id')['content_id']
+        .count()
+        .reset_index(name='total_reaction')
+    )
+
+    # Filter users with >= 5 different content items
+    content_items = ['like', 'love']
+
+    filtered_users = (
+        reactions
+        .assign(is_content_item = reactions['reaction'].isin(content_items))
+        .groupby('user_id')['is_content_item']
+        .count()
+        .reset_index(name='content_item_count')
+        .query('content_item_count >= 5')
+    )
+
+    # Calculate number of reactions per reaction per user 
+    reaction_count = (
+        reactions
+        .groupby(['user_id', 'reaction']).size()
+        .reset_index(name='reaction_count')
+    )
+
+    # Cacculate reaction type % per user + Filter users with 60% of any reaction type
+    reaction_type_rate = (
+        total_reactions
+        .merge(reaction_count, on='user_id', how='inner')
+        .merge(filtered_users, on='user_id', how='inner')
+        .assign(reaction_ratio = lambda df: (df['reaction_count'] / df['total_reaction'] + 1e-10).round(2))
+        .query('reaction_ratio >= 0.6')
+        .rename(columns={'reaction': 'dominant_reaction'})
+        .sort_values(by=['reaction_ratio', 'user_id'], ascending=[False, True])[['user_id', 'dominant_reaction', 'reaction_ratio']]
+    )
+
+    return reaction_type_rate
+    
