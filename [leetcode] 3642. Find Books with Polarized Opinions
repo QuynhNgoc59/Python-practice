@@ -1,0 +1,50 @@
+LINK: https://leetcode.com/problems/find-books-with-polarized-opinions/
+TYPE: Medium
+
+==> My approach:
+import pandas as pd
+
+def find_polarized_books(books: pd.DataFrame, reading_sessions: pd.DataFrame) -> pd.DataFrame:
+
+    # Calculate reading sessions, max rating, min rating per book
+    # Calculate rating spread per book
+    # Filter books with >= 5 reading sessions
+    # Filter books with at least one rating ≥ 4 and at least one rating ≤ 2
+    filtered_books = (
+        reading_sessions
+        .assign(
+            is_high_rating = reading_sessions['session_rating'] >= 4,
+            is_low_rating = reading_sessions['session_rating'] <= 2
+        )
+        .groupby('book_id')
+        .agg(
+            total_sessions = ('session_id', 'size'),
+            min_rating = ('session_rating', 'min'),
+            max_rating = ('session_rating', 'max'),
+            total_high_rating = ('is_high_rating', 'sum'),
+            total_low_rating = ('is_low_rating', 'sum')
+        )
+        .assign(rating_spread = lambda df: df['max_rating'] - df['min_rating'])
+        .reset_index()
+        .query('total_sessions >= 5 and total_high_rating > 0 and total_low_rating > 0')
+        )
+
+    # Calculate polarization score per book
+    # Filter books with polarization score >= 0.6
+    rating_spread = (
+        reading_sessions[(reading_sessions['session_rating'] >= 4) | (reading_sessions['session_rating'] <= 2)]
+        .groupby('book_id')['session_rating']
+        .size()
+        .reset_index(name='polarized_ratings_count')
+        .merge(books, on='book_id', how='inner')
+        .merge(filtered_books, on='book_id', how='inner')
+        .assign(polarization_score = lambda df: (df['polarized_ratings_count']/ df['total_sessions'] + 1e-10).round(2))
+        .query('polarization_score >= 0.6')
+        .drop(columns=['polarized_ratings_count', 'total_sessions', 'min_rating', 'max_rating', 'total_high_rating', 'total_low_rating'])
+        .sort_values(by=['polarization_score', 'title'], ascending=[False, False])
+    )
+    return rating_spread
+
+
+
+    
