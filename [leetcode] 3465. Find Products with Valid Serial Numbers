@@ -1,0 +1,20 @@
+LINK: https://leetcode.com/problems/find-products-with-valid-serial-numbers/description/
+TYPE: Easy
+
+==> My approach:
+import pandas as pd
+
+def find_valid_serial_products(products: pd.DataFrame) -> pd.DataFrame:
+    filtered_products = (
+        products[
+            products['description']
+            .str.contains(
+                r'(?<![A-Za-z0-9])SN\d{4}-\d{4}(?![A-Za-z0-9])',
+                regex=True,
+                na=False
+                )
+            ]
+            .sort_values('product_id')
+    )
+    
+    return filtered_products
