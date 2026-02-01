@@ -1,0 +1,40 @@
+LINK: https://leetcode.com/problems/find-consistently-improving-employees/description/?envType=problem-list-v2&envId=21z3vf9h
+TYPE: Medium
+
+==> My approch:
+import pandas as pd
+
+def find_consistently_improving_employees(employees: pd.DataFrame, performance_reviews: pd.DataFrame) -> pd.DataFrame:
+    # Calculate total order number per employee
+    # Find the date order per review per employee
+    # Find the next review ratings per employee
+    summerized_df = (
+        performance_reviews
+        .assign(
+            total_order = performance_reviews.groupby('employee_id')['review_id'].transform('count'),
+            order = performance_reviews.groupby('employee_id')['review_date'].rank(method='first', ascending=False),
+            next_rating1 =  performance_reviews.sort_values(by='review_date', ascending=True).groupby('employee_id')['rating'].shift(-1),
+            next_rating2 =  performance_reviews.sort_values(by='review_date', ascending=True).groupby('employee_id')['rating'].shift(-2)
+        )
+    )
+
+    # Filter employees with >= 3 reviews & get latest 3 reviews only
+    # Calculate rating difference & improvement score per employee
+    filtered_df1 = (
+        summerized_df[(summerized_df['total_order'] >= 3) & (summerized_df['order'] <= 3)]
+        .assign(
+            rating_diff1 = summerized_df['next_rating1'] - summerized_df['rating'],
+            rating_diff2 = summerized_df['next_rating2'] - summerized_df['next_rating1'],
+            improvement_score = summerized_df['next_rating2'] - summerized_df['rating']
+        )
+    )
+
+    # Filter employees with strictly increasing ratings & get other employee info
+    filtered_df2 = (
+        filtered_df1[(filtered_df1['rating_diff1'] > 0) & (filtered_df1['rating_diff2'] > 0) & (filtered_df1['improvement_score'].notnull())]
+        .merge(employees, on='employee_id', how='inner')
+        .sort_values(by=['improvement_score', 'name'], ascending=[False, True])
+        [['employee_id', 'name', 'improvement_score']]
+    )
+
+    return filtered_df2
