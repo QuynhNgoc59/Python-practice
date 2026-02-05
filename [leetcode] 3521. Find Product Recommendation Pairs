@@ -1,0 +1,30 @@
+LINK: https://leetcode.com/problems/find-product-recommendation-pairs/description/?envType=problem-list-v2&envId=21z3vf9h
+TYPE: Medium
+
+==> My approach:
+import pandas as pd
+
+def find_product_recommendation_pairs(product_purchases: pd.DataFrame, product_info: pd.DataFrame) -> pd.DataFrame:
+    # Get a combinations of purchased products by a same customer
+    ProductCombination =  (
+        product_purchases
+        .merge(product_purchases, on='user_id', how='inner')
+        .rename(columns={'product_id_x': 'product1_id', 'product_id_y': 'product2_id'})
+        .drop(columns=['quantity_x', 'quantity_y'])
+        .query('product1_id < product2_id')
+    )
+
+    # Count number of customers per combination + Get product info
+    CustomerCount = (
+        ProductCombination
+        .groupby(['product1_id', 'product2_id'])['user_id']
+        .size()
+        .reset_index(name='customer_count')
+        .query('customer_count >= 3')
+        .merge(product_info, left_on='product1_id', right_on='product_id', how='inner')
+        .merge(product_info, left_on='product2_id', right_on='product_id', how='inner')
+        .rename(columns={'category_x': 'product1_category', 'category_y': 'product2_category'})
+        .sort_values(by=['customer_count', 'product1_id', 'product2_id'], ascending=[False, True, True])[['product1_id', 'product2_id', 'product1_category', 'product2_category', 'customer_count']]
+    )
+    
+    return CustomerCount
