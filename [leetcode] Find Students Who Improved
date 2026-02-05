@@ -1,0 +1,24 @@
+LINK: https://leetcode.com/problems/find-students-who-improved/submissions/1907773963/?envType=problem-list-v2&envId=21z3vf9h
+TYPE: Medium
+
+==> My approach:
+import pandas as pd
+
+def find_students_who_improved(scores: pd.DataFrame) -> pd.DataFrame:
+    # Filter students with at least 2 taken exams per subject + Get the first & latest score per subject per student
+    filtered_student = (
+        scores
+        .sort_values(by=['student_id', 'subject', 'exam_date'])
+        .groupby(['student_id', 'subject'])
+        .agg(
+            exam_count = ('exam_date', 'nunique'),
+            first_score = ('score', 'first'),
+            latest_score = ('score', 'last'),
+        )
+        .reset_index()
+        .query('exam_count >= 2 and latest_score > first_score')
+        .drop(columns='exam_count')
+        .sort_values(by=['student_id', 'subject'])
+    )
+
+    return filtered_student
