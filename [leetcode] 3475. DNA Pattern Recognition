@@ -1,0 +1,20 @@
+LINK: https://leetcode.com/problems/dna-pattern-recognition/description/?envType=problem-list-v2&envId=21z3vf9h
+TYPE: Medium
+
+==> My approach:
+import pandas as pd
+
+def analyze_dna_patterns(samples: pd.DataFrame) -> pd.DataFrame:
+    # Identify if each sample_id belongs to specific patterns
+    patterns_recognition = (
+        samples
+        .assign(
+            has_start = lambda df: df['dna_sequence'].str.startswith('ATG').astype(int),
+            has_stop=lambda df: df['dna_sequence'].str.endswith(('TAA', 'TAG', 'TGA')).astype(int),
+            has_atat=lambda df: df['dna_sequence'].str.contains('ATAT').astype(int),
+            has_ggg=lambda df: df['dna_sequence'].str.contains('GGG').astype(int)
+        )
+        .sort_values(by='sample_id')
+    )
+
+    return patterns_recognition
