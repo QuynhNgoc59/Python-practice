@@ -1,0 +1,30 @@
+LINK: https://leetcode.com/problems/count-salary-categories/description/
+TYPE: Medium
+
+==> My approach:
+import pandas as pd
+
+def count_salary_categories(accounts: pd.DataFrame) -> pd.DataFrame:
+    # Create an income category table 
+    category = {'category': ['Low Salary', 'Average Salary', 'High Salary']}
+    category = pd.DataFrame(category)
+
+    # Define range per category 
+    condition = [
+        (accounts['income'] < 20000, 'Low Salary'),
+        ((accounts['income'] >= 20000) & (accounts['income'] <= 50000), 'Average Salary'),
+        (accounts['income'] > 50000, 'High Salary')
+    ]
+
+    # Calculate number of accounts per income category
+    income_category = (
+        accounts
+        .assign(
+            category = lambda df: df['income'].case_when(condition)
+        )
+        .merge(category, on='category', how='right')
+        .groupby('category')['account_id']
+        .count()
+        .reset_index(name='accounts_count')
+    )
+    return income_category       
