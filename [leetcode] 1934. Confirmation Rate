@@ -1,0 +1,22 @@
+LINK: https://leetcode.com/problems/confirmation-rate/submissions/1913343353/?envType=problem-list-v2&envId=21z3vf9h
+TYPE: Medium
+
+==> My approach:
+import pandas as pd
+
+def confirmation_rate(signups: pd.DataFrame, confirmations: pd.DataFrame) -> pd.DataFrame:
+    # Calculate confirmation rate per user
+    confirmation_rate = (
+        signups
+        .merge(confirmations, on='user_id', how='left')
+        .drop(columns='time_stamp_x')
+        .groupby('user_id')
+        .agg(
+            total_messages_count = ('action', 'count'),
+            confirmation_rate = ('action', lambda x: (x == 'confirmed').mean().round(2))
+        )
+        .reset_index()
+        .fillna({'confirmation_rate': 0})
+        .drop(columns='total_messages_count')
+    )
+    return confirmation_rate
