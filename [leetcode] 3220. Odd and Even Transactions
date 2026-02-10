@@ -1,0 +1,23 @@
+LINK: https://leetcode.com/problems/odd-and-even-transactions/description/?envType=problem-list-v2&envId=21z3vf9h
+TYPE: Medium
+
+==> My approach:
+import pandas as pd
+
+def sum_daily_odd_even(transactions: pd.DataFrame) -> pd.DataFrame:
+    # Another approach: still use lambda function but combine it with aggregation
+
+    # Calculate sum of amounts for odd and even transactions per day
+    aggregated_trans = (
+        transactions
+        .groupby('transaction_date')
+        .agg(
+            odd_sum = ('amount', lambda x: x[x % 2 != 0].sum()),
+            even_sum = ('amount', lambda x: x[x % 2 == 0].sum())
+        )
+        .reset_index()
+        .sort_values(by='transaction_date')
+    )
+    
+    return aggregated_trans
+
