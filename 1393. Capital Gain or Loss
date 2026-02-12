@@ -1,0 +1,24 @@
+LINK: https://leetcode.com/problems/capital-gainloss/description/?envType=problem-list-v2&envId=21z3vf9h
+TYPE: Medium
+
+==> My approach:
+import pandas as pd
+import numpy as np
+
+def capital_gainloss(stocks: pd.DataFrame) -> pd.DataFrame:
+    # Convert values of 'Sell' to negative ones
+    stocks['price'] = np.where(stocks['operation'] == 'Buy', -stocks['price'], stocks['price'])
+
+    # Convert array to dataframe
+    stocks = pd.DataFrame(stocks)
+    
+    # Calculate gain/loss per stock
+    capital_gainloss = (
+        stocks
+        .groupby('stock_name')['price']
+        .sum()
+        .reset_index(name='capital_gain_loss')
+    )
+
+    return capital_gainloss
+    
