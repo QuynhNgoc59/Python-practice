@@ -1,0 +1,27 @@
+LINK: https://leetcode.com/problems/restaurant-growth/description/?envType=problem-list-v2&envId=21z3vf9h
+TYPE: Medium
+
+==> My approach:
+import pandas as pd
+
+def restaurant_growth(customer: pd.DataFrame) -> pd.DataFrame:
+    # Calculate total amount per day
+    daily_amt = (
+        customer
+        .groupby('visited_on')['amount']
+        .sum()
+        .reset_index(name='total_amt')
+    )
+
+    # Calculate accumulated total & avg amount in 7-day period
+    return (
+        daily_amt
+        .sort_values(by='visited_on')
+        .assign(
+            amount = lambda df: df['total_amt'].rolling(7).sum().round(2),
+            average_amount = lambda df: df['total_amt'].rolling(7).mean().round(2)
+        )
+        .drop(columns='total_amt')
+        .dropna()
+        .sort_values(by='visited_on')
+    )
