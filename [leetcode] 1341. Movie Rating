@@ -1,0 +1,39 @@
+LINK: https://leetcode.com/problems/movie-rating/description/?envType=problem-list-v2&envId=21z3vf9h
+TYPE: Medium
+
+===> My approach:
+import pandas as pd
+
+def movie_rating(movies: pd.DataFrame, users: pd.DataFrame, movie_rating: pd.DataFrame) -> pd.DataFrame:
+    # Find the user rating the greatest number of movies
+    user_rating_number = (
+        movie_rating
+        .groupby('user_id')['movie_id']
+        .count()
+        .reset_index(name='rated_movies_count')
+        .assign(
+            movies_count_ranking = lambda df: df['rated_movies_count'].rank(method='dense', ascending=False)
+        )
+        .merge(users, on='user_id', how='inner')
+        .sort_values(by=['movies_count_ranking', 'name']).head(1)[['name']]
+        .rename(columns={'name': 'results'})
+    )
+
+    # Find the movie with highest avg rating in Feb 2020
+    movie_rating['created_at'] = pd.to_datetime(movie_rating['created_at'])
+
+    highest_rating_movie = (
+        movie_rating[(movie_rating['created_at'].dt.month == 2) & (movie_rating['created_at'].dt.year == 2020)]
+        .groupby('movie_id')['rating']
+        .mean()
+        .reset_index(name='avg_rating')
+        .assign (
+            avg_rating_ranking = lambda df: df['avg_rating'].rank(method='dense', ascending=False)
+        )
+        .merge(movies, on='movie_id', how='inner')
+        .sort_values(by=['avg_rating_ranking', 'title']).head(1)[['title']]
+        .rename(columns={'title': 'results'})
+    )
+
+    # Combine user and movie name
+    return pd.concat([user_rating_number, highest_rating_movie])
