@@ -1,0 +1,18 @@
+LINK: https://leetcode.com/problems/last-person-to-fit-in-the-bus/submissions/1917776628/?envType=problem-list-v2&envId=21z3vf9h
+TYPE: Medium
+
+==> My approach:
+import pandas as pd
+
+def last_passenger(queue: pd.DataFrame) -> pd.DataFrame:
+    # Calculate ccumulated weight over turns
+    weight_cumsum = (
+        queue
+        .sort_values(by='turn')
+        .assign(weight_cumsum = lambda df: df['weight'].cumsum())
+        .query('weight_cumsum <= 1000')
+        .sort_values(by='weight_cumsum', ascending=False)
+        .head(1)[['person_name']]
+    )
+
+    return weight_cumsum
