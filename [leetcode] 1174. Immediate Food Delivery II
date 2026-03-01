@@ -1,0 +1,26 @@
+LINK: https://leetcode.com/problems/immediate-food-delivery-ii/solutions/7056583/pandas-by-l6hzfcv6x4-jtb2/?envType=problem-list-v2&envId=21z3vf9h
+TYPE: Mdeium
+
+==> My approach:
+import pandas as pd
+
+def immediate_food_delivery(delivery: pd.DataFrame) -> pd.DataFrame:
+    # Identify the first order & immediate_order per customer 
+    order_identification = (
+        delivery
+        .assign(
+            delivery_row_number = lambda df: df.groupby('customer_id')['order_date'].rank(method='first', ascending=True)
+        )
+        .query('delivery_row_number == 1')
+        .assign(
+            is_immediate_order = lambda df: df['order_date'] == df['customer_pref_delivery_date']
+        )
+        .agg(
+            immediate_percentage = ('is_immediate_order', 'mean')
+        )
+        .multiply(100)
+        .round(2)
+        .rename(columns = {'is_immediate_order': 'immediate_percentage'})
+    )
+    # Calculate immediate order %
+    return order_identification
