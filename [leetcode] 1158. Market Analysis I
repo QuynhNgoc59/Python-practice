@@ -1,0 +1,27 @@
+LINK: https://leetcode.com/problems/market-analysis-i/description/?envType=problem-list-v2&envId=21z3vf9h
+TYPE: Medium
+
+==> My approach:
+import pandas as pd
+
+def market_analysis(users: pd.DataFrame, orders: pd.DataFrame, items: pd.DataFrame) -> pd.DataFrame:
+    # Calculate number of orders per user in 2019
+    order_count1 = (
+        orders
+        .loc[orders['order_date'].dt.year == 2019]
+        .groupby(['buyer_id'])['order_id']
+        .count()
+        .reset_index(name='orders_in_2019')
+        .rename(columns={'buyer_id': 'user_id'})
+    )
+
+    # Display 0 as value for number of orders for users who have never placed an order
+    order_count2  =(
+        users
+        .merge(order_count1, on='user_id', how='left')
+        .drop(columns = 'favorite_brand')
+        .rename(columns={'user_id': 'buyer_id'})
+        .fillna({'orders_in_2019': 0})
+    )    
+    
+    return order_count2
