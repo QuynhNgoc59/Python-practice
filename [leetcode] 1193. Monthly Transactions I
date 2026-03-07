@@ -1,0 +1,27 @@
+LINK: https://leetcode.com/problems/monthly-transactions-i/description/?envType=problem-list-v2&envId=21z3vf9h
+TYPE: Medium
+
+==> My approach:
+import pandas as pd
+
+def monthly_transactions(transactions: pd.DataFrame) -> pd.DataFrame:
+    #Extract year-month from trans_date    
+    transactions['month'] = transactions['trans_date'].dt.strftime('%Y-%m')
+
+    #Calculate total number of transaction, total amount of all transaction per, number of approved transaction, total amount of approved transaction per month per country
+    aggregated_trans = (
+        transactions
+        .assign(
+            approved_amt = lambda df: df['amount'].where(df['state'] == 'approved', 0)
+        )
+        .groupby(['month', 'country'], dropna=False)
+        .agg(
+            trans_count = ('id', 'count'),
+            approved_count = ('state', lambda x: (x == 'approved').sum()),
+            trans_total_amount = ('amount', 'sum'),
+            approved_total_amount = ('approved_amt', 'sum')
+        )
+        .reset_index()
+    )
+
+    return aggregated_trans
