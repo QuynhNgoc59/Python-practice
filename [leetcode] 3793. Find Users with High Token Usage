@@ -1,0 +1,24 @@
+LINK: https://leetcode.com/problems/find-users-with-high-token-usage/description/
+TYPE: Easy
+
+==> My approach:
+import pandas as pd
+
+def find_users_with_high_tokens(prompts: pd.DataFrame) -> pd.DataFrame:
+    # Calculate number of prompts & avg tokens per user + apply required filters
+    aggregated_prompts = (
+        prompts
+        .groupby('user_id')
+        .agg(
+            prompt_count = ('prompt', 'count'),
+            avg_tokens = ('tokens', 'mean'),
+            max_token = ('tokens', 'max')
+        )
+        .reset_index()
+        .round(2)
+        .query('prompt_count >= 3 and max_token > avg_tokens ')
+        .drop(columns='max_token')
+        .sort_values(by=['avg_tokens', 'user_id'], ascending = [False, True])
+    )
+
+    return aggregated_prompts
