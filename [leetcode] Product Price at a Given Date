@@ -1,0 +1,25 @@
+LINK: https://leetcode.com/problems/product-price-at-a-given-date/description/?envType=problem-list-v2&envId=21z3vf9h
+TYPE: Medium
+
+==> My approach:
+import pandas as pd
+
+def price_at_given_date(products: pd.DataFrame) -> pd.DataFrame:
+    # Find the product_id with price change before '2019-08-16'
+    updated_price = (
+        products[products['change_date'] <= '2019-08-16']
+        .sort_values(by=['product_id', 'change_date'], ascending=[True, False] )
+        .drop_duplicates(subset=['product_id'], keep='first')
+    )
+
+    # Replace prices of all product_id updated after '2019-08-16' with price = 10 
+    replaced_price = products.copy()
+    replaced_price.loc[(products['change_date'] > '2019-08-16'), ['new_price']] = 10
+
+    return (
+        pd
+        .concat([updated_price, replaced_price[~replaced_price['product_id'].isin(updated_price['product_id'])]])
+        .drop_duplicates(subset=['product_id'], keep='first')
+        .drop(columns='change_date')
+        .rename(columns={'new_price': 'price'})
+    )
