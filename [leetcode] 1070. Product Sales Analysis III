@@ -1,0 +1,17 @@
+LINK: https://leetcode.com/problems/product-sales-analysis-iii/description/?envType=problem-list-v2&envId=21z3vf9h
+TYPE: Medium
+
+==> My approach:
+import pandas as pd
+
+def sales_analysis(sales: pd.DataFrame) -> pd.DataFrame:
+    # Identify the earliest year of sales per product_id 
+    FirstYear = (
+        sales
+        .groupby('product_id')['year']
+        .min()
+        .reset_index(name='first_year')
+        .merge(sales, left_on=['product_id', 'first_year'], right_on=['product_id', 'year'], how='inner')
+        .drop(columns=['sale_id', 'year'])
+    )
+    return FirstYear
