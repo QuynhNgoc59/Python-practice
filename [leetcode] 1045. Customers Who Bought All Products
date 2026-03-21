@@ -1,0 +1,17 @@
+LINK: https://leetcode.com/problems/customers-who-bought-all-products/description/?envType=problem-list-v2&envId=21z3vf9h
+TYPE: Medium
+
+==> My approach:
+import pandas as pd
+
+def find_customers(customer: pd.DataFrame, product: pd.DataFrame) -> pd.DataFrame:
+    # Find customers having bought all products
+    filtered_customers = (
+        customer
+        .groupby('customer_id')['product_key']
+        .nunique()
+        .loc[lambda s: s == product['product_key'].nunique()]
+        .reset_index()
+        .drop(columns='product_key')
+    )
+    return filtered_customers
