@@ -1,0 +1,17 @@
+LINK: https://leetcode.com/problems/managers-with-at-least-5-direct-reports/description/?envType=problem-list-v2&envId=21z3vf9h
+TYPE: Medium
+
+==> My approach:
+import pandas as pd
+
+def find_managers(employee: pd.DataFrame) -> pd.DataFrame:
+    # Find managers with at least 5 direct reporters
+    return (
+        employee
+        .groupby(['managerId'])['id']
+        .nunique()
+        .reset_index(name='reporter_count')
+        .query('reporter_count >= 5')
+        .drop(columns=['reporter_count'])
+        .merge(employee, left_on='managerId', right_on='id', how='inner')[['name']]
+    )
