@@ -1,0 +1,27 @@
+LINK: https://leetcode.com/problems/game-play-analysis-iv/description/?envType=problem-list-v2&envId=21z3vf9h
+TYPE: Medium
+
+==> My approach:
+import pandas as pd
+
+def gameplay_analysis(activity: pd.DataFrame) -> pd.DataFrame:
+    # Find the first login per user
+    first_login = (
+        activity
+        .groupby('player_id')['event_date']
+        .min()
+        .reset_index(name='first_event_date')
+    )
+
+    # Find the sencond login per user with 1-day gap from their first login
+    second_login = (
+        first_login
+        .merge(activity, on='player_id', how='left')
+        .assign(total_player = lambda df: df['player_id'].nunique())
+        .loc[lambda df: (df['event_date'] - df['first_event_date']).dt.days  == 1]
+    )
+
+    # Calculate the % of users making the second login with 1-day gap from their first login
+    fraction = round(second_login['player_id'].nunique() / second_login['total_player'].max(), 2)
+
+    return pd.DataFrame([fraction], columns=['fraction']).fillna(0)
