@@ -1,0 +1,14 @@
+LINK: https://leetcode.com/problems/department-highest-salary/description/?envType=problem-list-v2&envId=21z3vf9h
+TYPE: Medium
+
+==> My approach:
+import pandas as pd
+
+def department_highest_salary(employee: pd.DataFrame, department: pd.DataFrame) -> pd.DataFrame:
+    # Give salary ranks to employees per department + Filter ones with highest salary per department
+    return (
+        employee
+        .merge(department, left_on='departmentId', right_on='id', how='inner')
+        .rename(columns={'name_y': 'Department', 'name_x': 'Employee', 'salary': 'Salary'})
+        .loc[lambda df: df['Salary'] == df.groupby('departmentId')['Salary'].transform('max')][['Department', 'Employee', 'Salary']] 
+    )
