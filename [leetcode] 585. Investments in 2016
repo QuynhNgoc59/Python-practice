@@ -1,0 +1,21 @@
+LINK: https://leetcode.com/problems/investments-in-2016/description/?envType=problem-list-v2&envId=21z3vf9h
+TYPE: Medium
+
+==> My approach:
+import pandas as pd
+
+def find_investments(insurance: pd.DataFrame) -> pd.DataFrame:
+    # Calculate the total investment of 2016 for all holders having similar 2015 investment amount + having similar lat-lon pair
+    return (
+        insurance
+        .assign(
+            tiv_2015_count = lambda df: df.groupby('tiv_2015')['pid'].transform('nunique'),
+            latlon_count = lambda df: df.groupby(['lat', 'lon'])['pid'].transform('nunique')
+        )
+        .loc[lambda df: (df['tiv_2015_count'] > 1) & (df['latlon_count'] == 1)]['tiv_2016']
+        .agg(tiv_2016 = 'sum')
+        .round(2)
+        .to_frame()
+    )
+
+   
