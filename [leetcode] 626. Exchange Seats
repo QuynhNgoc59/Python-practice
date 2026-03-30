@@ -1,0 +1,14 @@
+LINK: https://leetcode.com/problems/exchange-seats/submissions/1956584671/?envType=problem-list-v2&envId=21z3vf9h
+TYPE: Medium
+
+==> My approach:
+import pandas as pd
+
+def exchange_seats(seat: pd.DataFrame) -> pd.DataFrame:
+    # Swap the id per odd-numbered & even-numbered pair 
+    seat['id'] = (
+        seat['id']
+        .apply(lambda s: s - 1 if s%2 == 0 else s if (s%2 == 1) & (s == len(seat)) else s + 1)
+    )
+    return seat.sort_values(by='id')
+    
