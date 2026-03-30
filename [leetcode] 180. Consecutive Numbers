@@ -1,0 +1,23 @@
+LINK: https://leetcode.com/problems/consecutive-numbers/description/?envType=problem-list-v2&envId=21z3vf9h
+TYPE: Medium
+
+==> My approach:
+import pandas as pd
+
+def consecutive_numbers(logs: pd.DataFrame) -> pd.DataFrame:
+    # Give each row per num group a number
+    logs['rn'] = logs.groupby('num')['id'].cumcount() + 1
+
+    # Find where consecutive occurrences per num gorup are broken
+    logs['streak_group'] = logs['id'] - logs['rn']
+
+    # Filter nums appearing at least 3 times in a row
+    return (
+        logs
+        .groupby(['num', 'streak_group'])['num']
+        .count()
+        .reset_index(name='occurrences_count')
+        .query('occurrences_count >= 3')[['num']]
+        .drop_duplicates()
+        .rename(columns={'num': 'ConsecutiveNums'})
+    )
