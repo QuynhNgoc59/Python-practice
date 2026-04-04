@@ -1,0 +1,14 @@
+LINK: https://leetcode.com/problems/patients-with-a-condition/description/?envType=problem-list-v2&envId=v9r4nua2
+TYPE: Easy
+
+==> My approach:
+import pandas as pd
+
+def find_patients(patients: pd.DataFrame) -> pd.DataFrame:
+    # Find patients diagnosed with Type I Diabetes
+    return (
+        patients[
+            (patients['conditions'].str.contains(' DIAB1')) |
+            (patients['conditions'].str.startswith('DIAB1'))
+            ]
+    )
