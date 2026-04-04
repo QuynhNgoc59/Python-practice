@@ -1,0 +1,15 @@
+LINK: https://leetcode.com/problems/rank-scores/submissions/1964462192/?envType=problem-list-v2&envId=21z3vf9h
+TYPE: Medium
+
+==> My approach:
+import pandas as pd
+
+def order_scores(scores: pd.DataFrame) -> pd.DataFrame:
+    # Identify rankings over all game IDs
+    return (
+        scores
+        .assign(
+            rank = lambda df: df['score'].rank(method='dense', ascending=False)
+        )
+        .sort_values(by='rank')[['score', 'rank']]
+    )
