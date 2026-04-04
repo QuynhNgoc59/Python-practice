@@ -1,0 +1,16 @@
+LINK: https://leetcode.com/problems/bank-account-summary-ii/description/?envType=problem-list-v2&envId=v9r4nua2
+TYPE: Easy
+
+==> My approach:
+import pandas as pd
+
+def account_summary(users: pd.DataFrame, transactions: pd.DataFrame) -> pd.DataFrame:
+    # Find users with balance of more than 10000
+    return (
+        transactions
+        .groupby('account')['amount']
+        .sum()
+        .reset_index(name='balance')
+        .loc[lambda df: df['balance'] > 10000]
+        .merge(users, on='account', how='inner')[['name', 'balance']]
+    )
