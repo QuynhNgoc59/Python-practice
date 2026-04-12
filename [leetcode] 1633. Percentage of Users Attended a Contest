@@ -1,0 +1,25 @@
+LINK: https://leetcode.com/problems/percentage-of-users-attended-a-contest/description/?envType=problem-list-v2&envId=v9r4nua2
+TYPE: Easy 
+
+=> My approach:
+
+import pandas as pd
+
+def users_percentage(users: pd.DataFrame, register: pd.DataFrame):
+    # Calculate total number of users
+    user_count = len(users['user_id'])
+
+    # Calculater number of users per contest + Find % of registered users per contest
+    registered_users_rate = (
+        register
+        .groupby('contest_id')['user_id']
+        .nunique()
+        .reset_index(name='registered_user_count')
+        .assign(
+            total_user_count = user_count,
+            percentage = lambda df: ((df['registered_user_count'] / df['total_user_count'])*100).round(2)
+        )
+        .sort_values(by=['percentage', 'contest_id'], ascending=[False, True])[['contest_id', 'percentage']]
+    )
+    
+    return registered_users_rate
