@@ -1,0 +1,51 @@
+LINK: https://leetcode.com/problems/find-users-with-persistent-behavior-patterns/solutions/8311915/beats-most-by-dabholkarmayuresh-6dsn/
+TYPE: Hard
+
+==> My approach:
+import pandas as pd
+
+def find_behaviorally_stable_users(activity: pd.DataFrame) -> pd.DataFrame:
+    # Order the action per user per action
+    ordered_activity = (
+        activity
+        .sort_values(by=['user_id', 'action_date'])
+        .assign(
+            rn = lambda df: df.groupby(['user_id', 'action']).cumcount() + 1
+        )
+    )
+    # Identify streak group per user per action
+    streak_group = (
+        ordered_activity
+        .assign(
+            action_date = pd.to_datetime(ordered_activity['action_date']),
+            streak_gr = lambda df: df['action_date'] - pd.to_timedelta(df['rn'], unit='D')
+        )
+    )
+    # Find users with at least 5 consecutive days of the same action
+    persistent_users = (
+        streak_group
+        .groupby(['user_id', 'streak_gr', 'action'])
+        .agg(
+            streak_length = ('action_date', 'count'),
+            start_date = ('action_date', 'min'),
+            end_date = ('action_date', 'max')
+        )
+        .reset_index()
+        .query('streak_length >= 5')
+    )
+
+    # Return 1 row per user with highest streak only
+    highest_streak = (
+        persistent_users
+        .sort_values(by='streak_length', ascending=False)
+        .assign(
+            streak_rn = lambda df: df.groupby('user_id').cumcount() + 1
+        )
+    )
+
+    return (
+        highest_streak[highest_streak['streak_rn'] == 1][['user_id', 'action', 'streak_length', 'start_date', 'end_date']]
+        .sort_values(by=['streak_length','user_id'], ascending=[False, True])
+    )
+
+    
